@@ -1,4 +1,10 @@
-# debian-proxmox-encrypted-swap
+# Set Up Encrypted Swap on Debian 12 / Proxmox VE 8
+
+## Description
+
+This guide explains how to set up an encrypted swap backed by a swap-file.
+The steps are based on the [Arch Wiki: dm-crypt/Swap encryption](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption) guide.
+I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on other Linux systems.
 
 ### Step 1
 
