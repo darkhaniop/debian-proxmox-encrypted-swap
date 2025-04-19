@@ -6,34 +6,42 @@ This guide explains how to set up an encrypted swap backed by a swap-file.
 The steps are based on the [Arch Wiki: dm-crypt/Swap encryption](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption) guide.
 I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on other Linux systems.
 
-### Step 1
+## Solution
 
-create 8GiB swap file
+### 1. Disable existing swap
+
+If other persistent-storage-backed swap is enabled on the system, make sure to disable those and remove them from the system configuration.
+
+### 2. Create a backing swap file
+
+**File size must be divisible by the encryption block size in the following step.** This guide uses 4096 bytes. For example, if we want 2G swap, instead of 2'000'000'000 bytes, we should create a file of size 2 GiB or 2'147'483'648 (=2*1024^3) bytes.
+
 ```bash
-dd bs=1M count=8192 if=/dev/zero of=/swap8.encrypted
+dd bs=1M count=2048 if=/dev/zero of=/swap0.encrypted
 ```
 
-### Step 2a (file)
+### 3. Configure `crypttab`
 
-create crypttab
+Similar to how `/etc/fstab` is used to define filesystems, `/etc/crypttab` is used to define encrypted partitions to be opened at system boot.
+
+Put the following configuration in `/etc/crypttab` (create a new file if it does not already exist)
 ```
-# <name>  <device>       <password>    <options>
-swap8  /swap8.encrypted  /dev/urandom  swap,cipher=aes-xts-plain64,size=256,sector-size=4096
+# <name>  <device>          <password>    <options>
+swap0     /swap0.encrypted  /dev/urandom  swap,cipher=aes-xts-plain64,size=256,sector-size=4096
 ```
 
-### Step 2b (partition)
+It instructs `dm-crypt` to create a mapping `/dev/mapper/swap0` for `/swap0.encrypted` encrypted with a random password without storing the encryption headers in the file itself.
 
-Make sure to not use `/dev/sdb2` or similar (such identifier can change on reboot).
-
-create crypttab
+**Warning: When using a partition instead of a file, DO NOT use the partition path in the form of `/dev/sdb2`! Device numbering can change between boots (and when additional devices, e.g. USB are added or removed) and `dm-crypt` could overwrite a different disk partition.** Instead, we can use the partition identifier, which is (most likely) unique and it does not change when the partition is reformatted (i.e., when it is re-encrypted with a new password after every reboot):
 ```
 # <name>  <device>                                       <password>    <options>
-swap8     PARTUUID=6889ce20-0eea-41a9-afed-65e25277cc3a  /dev/urandom  swap,cipher=aes-xts-plain64,size=256,sector-size=4096
+swap0     PARTUUID=6889ce20-0eea-41a9-afed-65e25277cc3a  /dev/urandom  swap,cipher=aes-xts-plain64,size=256,sector-size=4096
 ```
 
-### Step 3
+### 4. Configure `fstab`
 
-update fstab
+Finally, we can configure the swap space in `/etc/fstab` by appending:
 ```
-/dev/mapper/swap8  none  swap  defaults  0  0
+/dev/mapper/swap0  none  swap  defaults  0  0
 ```
+
