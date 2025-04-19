@@ -45,3 +45,35 @@ Finally, we can configure the swap space in `/etc/fstab` by appending:
 /dev/mapper/swap0  none  swap  defaults  0  0
 ```
 
+### 5a. Optional: Apply Changes without rebooting
+
+Works on Debian 12 and Proxmox 8, may work on other `systemd`-managed systems, but I have not tested it.
+
+```bash
+/usr/lib/systemd/system-generators/systemd-cryptsetup-generator /run/systemd/generator
+systemctl daemon-reload
+systemctl restart cryptsetup.target
+```
+
+This tells `systemd` to generate unit cryptsetup unit files based on the current `/etc/crypttab`, reload the configuration, and execute them.
+
+
+### 5b. Optional: Reboot to Apply Changes
+
+The configuration changes will be applied after reboot.
+
+### 6. Verify
+
+The changes can be verified with `lsblk` and `swapon`.
+The following example shows results on a Proxmox VE 8 node with 16 GiB encrypted swap:
+```
+# lsblk
+NAME                 MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+loop0                  7:0    0    16G  0 loop  
+└─swap0              252:6    0    16G  0 crypt [SWAP]
+...
+# swapon
+NAME      TYPE      SIZE  USED PRIO
+/dev/dm-0 partition  16G    0B   -2
+#
+```
