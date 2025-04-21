@@ -6,6 +6,14 @@ This guide explains how to set up an encrypted swap backed by a swap-file.
 The steps are based on the [Arch Wiki: dm-crypt/Swap encryption](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption) guide.
 I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on other Linux systems.
 
+## Motivation
+
+Sometimes virtualization host systems (currently my host environments include Proxmox VE and vanilla Debian), run nested containerization and virtualization environments (e.g., VMs that host Kubernetes and similar clusters in dev environments).
+Some of these envionments may require the host OS to run without the swap enabled due to security considerations.
+
+However, when such "host OS" itself is nested and if the parent host system still uses a swap partition (without the knowledge of the nested OS), this could lead to potential security vunerabilities.
+Therefore, configuring the virtualization host system with encrypted swap is more secure than using an unencrypted swap partition or file.
+
 ## Solution
 
 ### 1. Disable existing swap
