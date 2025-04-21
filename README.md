@@ -22,10 +22,18 @@ If other persistent-storage-backed swap is enabled on the system, make sure to d
 
 ### 2. Create a backing swap file
 
+Create a backing swap file of the desired size with `dd` or `truncate` (truncate is quicker because it does not write the bytes to the disk).
+
 **File size must be divisible by the encryption block size in the following step.** This guide uses 4096 bytes. For example, if we want 2G swap, instead of 2'000'000'000 bytes, we should create a file of size 2 GiB or 2'147'483'648 (=2*1024^3) bytes.
 
+With `dd`:
 ```bash
 dd bs=1M count=2048 if=/dev/zero of=/swap0.encrypted
+```
+
+With `truncate`:
+```bash
+truncate -s 2147483648 /swap0.encrypted
 ```
 
 ### 3. Configure `crypttab`
