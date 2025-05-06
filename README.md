@@ -9,7 +9,7 @@ I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on 
 ## Motivation
 
 Sometimes virtualization host systems (currently my host environments include Proxmox VE and vanilla Debian), run nested containerization and virtualization environments (e.g., VMs that host Kubernetes and similar clusters in dev environments).
-Some of these envionments may require the host OS to run without the swap enabled due to security considerations.
+Some of these envionments may require the host OS to run without swap enabled due to security considerations.
 
 However, when such "host OS" itself is nested and if the parent host system uses a swap partition (without the knowledge of the nested OS), this could lead to potential security vunerabilities.
 Therefore, configuring the virtualization host system with encrypted swap is more secure than using an unencrypted swap partition or file.
@@ -30,7 +30,7 @@ If other persistent-storage-backed swap is enabled on the system, make sure to d
 
 Create a backing swap file of the desired size with `dd` or `truncate` (truncate is quicker because it does not write the bytes to the disk).
 
-**File size must be divisible by the encryption block size in the following step.** This guide uses 4096 bytes. For example, if we want 2G swap, instead of 2'000'000'000 bytes, we should create a file of size 2 GiB or 2'147'483'648 (=2*1024^3) bytes.
+**File size must be divisible by the encryption block size in the following step.** In this guide we use 4096-byte sector size. For example, if we want 2G swap, instead of 2'000'000'000 bytes, we should create a file of size 2 GiB or 2'147'483'648 (=2*1024^3) bytes.
 
 With `dd`:
 ```bash
@@ -41,6 +41,22 @@ With `truncate`:
 ```bash
 truncate -s 2147483648 /swap0.encrypted
 ```
+
+Example sizes:
+
+In GiB | In 1M blocks | In bytes
+--- | --- | ---
+2 | 2048 | 2147483648
+4 | 4096 | 4294967296
+8 | 8192 | 8589934592
+16 | 16384 | 17179869184
+24 | 24576 | 25769803776
+32 | 32768 | 34359738368
+48 | 49152 | 51539607552
+64 | 65536 | 68719476736
+72 | 73728 | 77309411328
+96 | 98304 | 103079215104
+128 | 131072 | 137438953472
 
 ### 3. Configure `crypttab`
 
