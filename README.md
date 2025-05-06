@@ -3,7 +3,7 @@
 ## Description
 
 This guide explains how to set up an encrypted swap backed by a swap-file.
-The steps are based on the [Arch Wiki: dm-crypt/Swap encryption](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption) guide.
+The steps are based on the [Arch-wiki: dm-crypt/Swap encryption](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption) guide.
 I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on other Linux systems.
 
 ## Motivation
@@ -11,8 +11,14 @@ I verified the method on Debian 11, 12, and Proxmox VE 8, but it should work on 
 Sometimes virtualization host systems (currently my host environments include Proxmox VE and vanilla Debian), run nested containerization and virtualization environments (e.g., VMs that host Kubernetes and similar clusters in dev environments).
 Some of these envionments may require the host OS to run without the swap enabled due to security considerations.
 
-However, when such "host OS" itself is nested and if the parent host system still uses a swap partition (without the knowledge of the nested OS), this could lead to potential security vunerabilities.
+However, when such "host OS" itself is nested and if the parent host system uses a swap partition (without the knowledge of the nested OS), this could lead to potential security vunerabilities.
 Therefore, configuring the virtualization host system with encrypted swap is more secure than using an unencrypted swap partition or file.
+
+## Caveats of Using Encrypted Swap
+
+In addition to the CPU overhead needed for encryption, there are additional caveats of using encrypted swap partitions on machines with the  suspend-to-disk mode (a.k.a. "hybernation") support such as laptops and desktop PCs.
+In short, to ensure the desired security benefits of encrypted swap, the suspend-to-disk mode must be diabled.
+For more details please see [the Arch Wiki page](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption).
 
 ## Solution
 
@@ -81,7 +87,7 @@ The configuration changes will be applied after reboot.
 ### 6. Verify
 
 The changes can be verified with `lsblk` and `swapon`.
-The following example shows results on a Proxmox VE 8 node with 16 GiB encrypted swap:
+The following example shows a Proxmox VE 8 node with 16 GiB encrypted swap configured:
 ```
 # lsblk
 NAME                 MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
